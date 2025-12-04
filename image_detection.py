@@ -12,18 +12,6 @@ import numpy as np
 import sklearn.model_selection as sklearnmodels
 
 #############################
-# 1) Get the Brain Tumor Data
-#############################
-
-# Grab all the data from that directory
-# From: /data/csci460/BTD
-trainX, testX, trainY, testY = readImageDirectory("/data/csci460/BTD", {"yes":1, "no":0}, (224,224), False)
-
-# Let's setup the Y labels to be compatible with a "hot-ones" representation
-trainY = tf.keras.utils.to_categorical(trainY)
-testY  = tf.keras.utils.to_categorical(testY)
-
-#############################
 # Function for reading images
 #############################
 def readImageDirectory(basedir, classDict, imageSize=None, quiet=True, testRatio=0.33):
@@ -61,3 +49,15 @@ def readImageDirectory(basedir, classDict, imageSize=None, quiet=True, testRatio
   # Return these as a tensor and a numpy vector
   trainX, testX, trainY, testY = sklearnmodels.train_test_split(imagesX, imagesY, test_size=testRatio)
   return tf.convert_to_tensor(trainX), tf.convert_to_tensor(testX), np.array(trainY, dtype="float32"), np.array(testY, dtype="float32")
+
+#############################
+# 1) Get the Brain Tumor Data
+#############################
+
+# Grab all the data from that directory
+# From: /data/csci460/BTD
+trainX, testX, trainY, testY = readImageDirectory("/data/csci460/BTD", {"yes":1, "no":0}, (224,224), False)
+
+# Let's setup the Y labels to be compatible with a "hot-ones" representation
+trainY = tf.keras.utils.to_categorical(trainY)
+testY  = tf.keras.utils.to_categorical(testY)
