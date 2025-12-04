@@ -21,7 +21,7 @@ This project implements a deep learning system to classify brain MRI images for 
 source /data/shared-venvs/tensorflow-standard/bin/activate
 
 ### Running the Training Script
-python images_detection.py
+python3 images_detection.py
 
 ### Outputs
 - Trained CNN model.
