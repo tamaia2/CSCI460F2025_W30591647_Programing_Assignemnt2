@@ -82,9 +82,7 @@ validation_generator  = data_gen.flow_from_dataframe(
     batch_size=16
 )
 
-###########
 # CNN model
-###########
 model = Sequential([
     Conv2D(32, (3, 3), activation='relu', input_shape=(224, 224, 1)),
     MaxPooling2D(2, 2),
