@@ -38,11 +38,18 @@ df = pd.DataFrame({
 })
 
 # split
-train_df, test_df, valid_df = train_test_split(
+train_df, test_df = train_test_split(
     df,
     test_size=0.2,
     random_state=42,
     stratify=df['cat']
+)
+# second split
+valid_df, test_df = train_test_split(
+    temp_df,
+    test_size=0.5,
+    random_state=42,
+    stratify=temp_df['cat']
 )
 
 # generators
