@@ -38,7 +38,7 @@ df = pd.DataFrame({
 })
 
 # split
-train_df, test_df = train_test_split(
+train_df, temp_df = train_test_split(
     df,
     test_size=0.2,
     random_state=42,
