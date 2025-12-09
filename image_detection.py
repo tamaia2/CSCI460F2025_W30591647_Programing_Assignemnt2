@@ -12,68 +12,71 @@ import numpy as np
 import matplotlib.pyplot as plt
 import tensorflow as tf
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense,Dropout
+from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 from sklearn.model_selection import train_test_split
 
-#############################
-# 1) Get the Brain Tumor Data
-#############################
-
-# variables
+# Base directory for images
 directory = '/data/csci460/BTD'
+
+# Category names
 category = ['yes', 'no']
-images_paths = []
-image_labels = []
 
-# reading through the yes/no
+# Lists for paths and labels
+image_paths = []
+cat_labels = []
+
+# Collect all file paths and labels
 for cat in category:
-    path = os.path.join(directory, cat)
-    files = os.listdir(path)
-    for filename in files:
-        full = os.path.join(path, filename)
-        images_paths.append(full)
-        image_labels.append(cat)
+    class_dir = os.path.join(directory, cat)
+    class_files = os.listdir(class_dir)
 
-df = pd.DataFrame({'image_paths':images_paths,
-                'image_labels':image_labels})
+    for filename in class_files:
+        full = os.path.join(class_dir, filename)
+        image_paths.append(full)
+        cat_labels.append(cat)
 
-########################
-# 2) Build the CNN model
-########################
+# Create DataFrame
+dataset_df = pd.DataFrame({
+    'image_path': image_paths,
+    'cat': cat_labels
+})
 
-# split data into training and testing
+print(dataset_df.sample(10))
+print(dataset_df['cat'].value_counts())
+
+# Split dataset
 train_df, test_df = train_test_split(
-    df,
+    dataset_df,
     test_size=0.2,
-    stratify=df['image_labels']
+    random_state=42,
+    stratify=dataset_df['cat']
 )
 
-gen = ImageDataGenerator()
+# Image generators
+data_gen = ImageDataGenerator()
 
-# training data generator
-train_gen = gen.flow_from_dataframe(
+train_generator = data_gen.flow_from_dataframe(
     train_df,
     x_col='image_path',
-    y_col='image_label',
+    y_col='cat',
     target_size=(224, 224),
     color_mode='grayscale',
     class_mode='binary',
     batch_size=16
 )
 
-# testing data generator
-test_gen = gen.flow_from_dataframe(
+test_generator = data_gen.flow_from_dataframe(
     test_df,
     x_col='image_path',
-    y_col='image_label',
+    y_col='cat',
     target_size=(224, 224),
     color_mode='grayscale',
     class_mode='binary',
     batch_size=16
 )
 
-# model
+# Build CNN model
 model = Sequential([
     Conv2D(32, (3, 3), activation='relu', input_shape=(224, 224, 1)),
     MaxPooling2D(2, 2),
@@ -90,15 +93,87 @@ model = Sequential([
 
     Dense(128, activation='relu'),
     Dropout(0.5),
+
     Dense(64, activation='relu'),
     Dense(32, activation='relu'),
 
     Dense(1, activation='sigmoid')
 ])
 
-# compile
 model.compile(
     optimizer='adam',
     loss='binary_crossentropy',
     metrics=['accuracy']
 )
+
+# Train model
+training_history = model.fit(
+    train_generator,
+    epochs=25,
+    validation_data=test_generator
+)
+
+# Evaluate model
+model.evaluate(train_generator)
+model.evaluate(test_generator)
+
+# Plot accuracy
+plt.figure(figsize=(7, 5))
+plt.plot(training_history.history['accuracy'], label='Train Accuracy')
+plt.plot(training_history.history['val_accuracy'], label='Validation Accuracy')
+plt.legend()
+plt.title('Model Accuracy')
+plt.savefig('accuracy.png')
+plt.show()
+
+# Plot loss
+plt.figure(figsize=(7, 5))
+plt.plot(training_history.history['loss'], label='Train Loss')
+plt.plot(training_history.history['val_loss'], label='Validation Loss')
+plt.legend()
+plt.title('Model Loss')
+plt.savefig('loss.png')
+plt.show()
+
+# -------------------------------------------------
+# Prediction Visualization
+# -------------------------------------------------
+
+import random
+from tensorflow.keras.preprocessing import image
+
+def visualize_prediction(cat, filename):
+    img_path = os.path.join(directory, cat, filename)
+    img = image.load_img(img_path, target_size=(224, 224), color_mode='grayscale')
+    img_array = image.img_to_array(img)
+    img_array = np.expand_dims(img_array, axis=0)
+
+    prediction = model.predict(img_array)
+
+    if prediction[0][0] > 0.5:
+        predicted_label = "Tumor"
+        title_color = "red"
+    else:
+        predicted_label = "No Tumor"
+        title_color = "green"
+
+    plt.imshow(np.array(img).squeeze(), cmap='gray')
+    plt.title(f"Actual: {cat.upper()}\nPredicted: {predicted_label}", color=title_color)
+    plt.axis('off')
+
+
+tumor_yes = random.sample(os.listdir(os.path.join(directory, 'yes')), 3)
+tumor_no = random.sample(os.listdir(os.path.join(directory, 'no')), 3)
+
+plt.figure(figsize=(12, 8))
+
+for i, filename in enumerate(tumor_yes):
+    plt.subplot(2, 3, i + 1)
+    visualize_prediction('yes', filename)
+
+for i, filename in enumerate(tumor_no):
+    plt.subplot(2, 3, i + 4)
+    visualize_prediction('no', filename)
+
+plt.tight_layout()
+plt.show()
