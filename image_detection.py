@@ -39,10 +39,10 @@ df = pd.DataFrame({
 
 # split
 train_df, test_df, valid_df = train_test_split(
-    dataset_df,
+    df,
     test_size=0.2,
     random_state=42,
-    stratify=dataset_df['cat']
+    stratify=df['cat']
 )
 
 # generators
@@ -65,6 +65,16 @@ test_generator = data_gen.flow_from_dataframe(
     class_mode='binary',
     batch_size=16
 )
+validation_generator  = data_gen.flow_from_dataframe(
+    valid_df,
+    x_col='image_path',
+    y_col='cat',
+    target_size=(224, 224),
+    color_mode='grayscale',
+    class_mode='binary',
+    batch_size=16
+)
+
 ###########
 # CNN model
 ###########
@@ -107,6 +117,7 @@ training_history = model.fit(
 # evaluate
 model.evaluate(train_generator)
 model.evaluate(test_generator)
+model.evaluate(validation_generator)
 
 # plot to show accuracy
 plt.figure(figsize=(7, 5))
@@ -117,7 +128,7 @@ plt.title('Model Accuracy')
 plt.savefig('accuracy.png')
 plt.show()
 
-#plot to show loss
+# plot to show loss
 plt.figure(figsize=(7, 5))
 plt.plot(training_history.history['loss'], label='Train Loss')
 plt.plot(training_history.history['val_loss'], label='Validation Loss')
@@ -127,8 +138,6 @@ plt.savefig('loss.png')
 plt.show()
 
 # Prediction Visualization
-# -------------------------------------------------
-
 import random
 from tensorflow.keras.preprocessing import image
 
@@ -151,7 +160,7 @@ def visualize_prediction(cat, filename):
     plt.title(f"Actual: {cat.upper()}\nPredicted: {predicted_label}", color=title_color)
     plt.axis('off')
 
-
+# samples of yes and no
 tumor_yes = random.sample(os.listdir(os.path.join(directory, 'yes')), 3)
 tumor_no = random.sample(os.listdir(os.path.join(directory, 'no')), 3)
 
@@ -166,4 +175,5 @@ for i, filename in enumerate(tumor_no):
     visualize_prediction('no', filename)
 
 plt.tight_layout()
+plt.savefig('prediction.png')
 plt.show()
