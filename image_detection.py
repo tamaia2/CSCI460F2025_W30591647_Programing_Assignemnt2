@@ -2,8 +2,7 @@
 #  Student Name: Alex Tamai
 #  Student ID: W30591647
 #  Course Code: CSCI 460 -- Fall 2025
-#  Assignment Due Date: December 1, 2025
-#  GitHub Link: https://github.com/tamaia2/CSCI460F2025_W30591647_Programing_Assignemnt2
+#  Assignment Due Date: December 9, 2025
 ######################################################
 
 import os
@@ -16,17 +15,14 @@ from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropou
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 from sklearn.model_selection import train_test_split
 
-# Base directory for images
+# directory for images
 directory = '/data/csci460/BTD'
 
-# Category names
 category = ['yes', 'no']
-
-# Lists for paths and labels
 image_paths = []
 cat_labels = []
 
-# Collect all file paths and labels
+# getting all paths and labels
 for cat in category:
     class_dir = os.path.join(directory, cat)
     class_files = os.listdir(class_dir)
@@ -36,26 +32,21 @@ for cat in category:
         image_paths.append(full)
         cat_labels.append(cat)
 
-# Create DataFrame
-dataset_df = pd.DataFrame({
+df = pd.DataFrame({
     'image_path': image_paths,
     'cat': cat_labels
 })
 
-print(dataset_df.sample(10))
-print(dataset_df['cat'].value_counts())
-
-# Split dataset
-train_df, test_df = train_test_split(
+# split
+train_df, test_df, valid_df = train_test_split(
     dataset_df,
     test_size=0.2,
     random_state=42,
     stratify=dataset_df['cat']
 )
 
-# Image generators
+# generators
 data_gen = ImageDataGenerator()
-
 train_generator = data_gen.flow_from_dataframe(
     train_df,
     x_col='image_path',
@@ -65,7 +56,6 @@ train_generator = data_gen.flow_from_dataframe(
     class_mode='binary',
     batch_size=16
 )
-
 test_generator = data_gen.flow_from_dataframe(
     test_df,
     x_col='image_path',
@@ -75,8 +65,9 @@ test_generator = data_gen.flow_from_dataframe(
     class_mode='binary',
     batch_size=16
 )
-
-# Build CNN model
+###########
+# CNN model
+###########
 model = Sequential([
     Conv2D(32, (3, 3), activation='relu', input_shape=(224, 224, 1)),
     MaxPooling2D(2, 2),
@@ -106,18 +97,18 @@ model.compile(
     metrics=['accuracy']
 )
 
-# Train model
+# train
 training_history = model.fit(
     train_generator,
     epochs=25,
     validation_data=test_generator
 )
 
-# Evaluate model
+# evaluate
 model.evaluate(train_generator)
 model.evaluate(test_generator)
 
-# Plot accuracy
+# plot to show accuracy
 plt.figure(figsize=(7, 5))
 plt.plot(training_history.history['accuracy'], label='Train Accuracy')
 plt.plot(training_history.history['val_accuracy'], label='Validation Accuracy')
@@ -126,7 +117,7 @@ plt.title('Model Accuracy')
 plt.savefig('accuracy.png')
 plt.show()
 
-# Plot loss
+#plot to show loss
 plt.figure(figsize=(7, 5))
 plt.plot(training_history.history['loss'], label='Train Loss')
 plt.plot(training_history.history['val_loss'], label='Validation Loss')
@@ -135,7 +126,6 @@ plt.title('Model Loss')
 plt.savefig('loss.png')
 plt.show()
 
-# -------------------------------------------------
 # Prediction Visualization
 # -------------------------------------------------
 
