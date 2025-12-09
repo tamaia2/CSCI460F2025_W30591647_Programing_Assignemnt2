@@ -10,10 +10,12 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import tensorflow as tf
+import random
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 from sklearn.model_selection import train_test_split
+from tensorflow.keras.preprocessing import image
 
 # directory for images
 directory = '/data/csci460/BTD'
@@ -142,10 +144,7 @@ plt.title('Model Loss')
 plt.savefig('loss.png')
 plt.show()
 
-# Prediction Visualization
-import random
-from tensorflow.keras.preprocessing import image
-
+# prediction
 def visualize_prediction(cat, filename):
     img_path = os.path.join(directory, cat, filename)
     img = image.load_img(img_path, target_size=(224, 224), color_mode='grayscale')
@@ -156,10 +155,10 @@ def visualize_prediction(cat, filename):
 
     if prediction[0][0] > 0.5:
         predicted_label = "Tumor"
-        title_color = "red"
+        title_color = "green"
     else:
         predicted_label = "No Tumor"
-        title_color = "green"
+        title_color = "red"
 
     plt.imshow(np.array(img).squeeze(), cmap='gray')
     plt.title(f"Actual: {cat.upper()}\nPredicted: {predicted_label}", color=title_color)
